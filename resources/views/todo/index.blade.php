@@ -2,9 +2,13 @@
 @section('content')
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-8">
+            
+            <div class="col-md-10">
+                <div class="title">
+                    <h4><b>Todo list app</b></h4>
+                </div>
                 <div>
-                    <a href="{{route('todo.create')}}"><button class="btn btn-primary">Add List</button></a>
+                    <a href="{{route('todolist.create')}}"><button class="btn btn-primary">Add List</button></a>
                 </div>
                 <br>
                 <div class="card">
@@ -20,21 +24,28 @@
                         <table class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th scope="col">#</th>
                                     <th scope="col">To do </th>
-                                    <th scope="col">Created on</th>
-                                    <th scope="col">Last updated</th>
+                                    <th scope="col">Label </th>
                                     <th scope="col">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($item as $items)
                                     <tr>
-                                    <th scope="row">{{$items->id}}</th>
                                     <td>{{$items->name}}</td>
-                                    <td>{{$items->created_at->diffForHumans()}}</td>
-                                    <td>{{$items->updated_at->diffForHumans()}}</td>
-                                    <td>view | delete</td>
+                                    <td><span class="badge badge-primary">{{$items->label->label_name}}</span> </td>
+                                    <td>
+                                        {{-- view button --}}
+                                        <a href="{{route('todolist.show',['todolist'=>$items])}}"><button class="btn btn-sm btn-primary">View</button></a>                                        
+                                        {{-- update button --}}
+                                        <a href="{{route('todolist.edit',['todolist'=> $items])}}"><button class="btn btn-sm btn-warning">Edit</button></a>
+                                        {{-- delete button --}}
+                                        <a href="#" onclick="event.preventDefault(); $('#todolist-delete--{{ $items->id}}').submit();" ><button class="btn btn-sm btn-danger">Delete</button></a>
+                                        <form action="{{route('todolist.destroy',['todolist'=> $items])}}" class="d-none" method="POST" id="todolist-delete--{{ $items->id}}">
+                                            @csrf
+                                            @method('DELETE')
+                                        </form>
+                                    </td>
                                 </tr>
                                 @empty
                                     <th >Empty</th>

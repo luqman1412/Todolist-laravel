@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CreateTodolistRequest;
+use App\Labels;
 use App\todolist;
 use Illuminate\Http\Request;
+use Illuminate\Queue\RedisQueue;
 
 class TodoController extends Controller
 {
@@ -15,8 +18,8 @@ class TodoController extends Controller
     public function index()
     {
         //
-        $item = todolist::all();
-        return view('todo.index')->with('item',$item);
+        $todolists = todolist::orderBy('label_id','asc')->get();
+        return view('todo.index')->with('item',$todolists);
     }
 
     /**
@@ -27,7 +30,8 @@ class TodoController extends Controller
     public function create()
     {
         //
-        return view('todo.create');
+        $labels = Labels::all();
+        return view('todo.create')->with('label',$labels);
     }
 
     /**
@@ -36,59 +40,68 @@ class TodoController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(CreateTodolistRequest $request)
     {
         //
-        $item = new todolist();
-        $item->name = $request->get('listname');
-        $item->save();
-
-        return redirect('todo/')->with('status','Succesfully add list');
+        todolist::create($request->validated());
+        return redirect()->route('todolist.index')->with('status','Succesfully added the list');
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param  \App\todolist  $todolist
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(todolist $todolist)
     {
         //
+        return view('todo.show')->with('items',$todolist);
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param  \App\todolist  $todolist
      * @return \Illuminate\Http\Response
      */
     public function edit(todolist $todolist)
     {
         //
-        return view('todo.edit')->with('list',$todolist);
+        $labels = Labels::all();
+        return view('todo.edit')->with(compact('labels', 'todolist'));
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  \App\todolist  $todolist
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, todolist $todolist)
     {
         //
+        // dd($request);
+        $todolist->name = $request->name;
+        $todolist->label_id = $request->label_id;
+        $todolist->save();
+
+        $message = ($todolist->wasChanged()) ? 'Succesfully update: ' . $todolist->name : 'Nothing was change' ;
+        return redirect()->route('todolist.index')->with('status', $message);
+        
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\todolist  $todolist
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(todolist $todolist)
     {
         //
+        $todolist->delete();
+        return redirect()->route('todolist.index')->with('meassage','Successfully delete the list');
     }
 }
